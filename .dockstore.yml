@@ -6,5 +6,15 @@ workflows:
      filters:  # Only develop or master branches and localAligner/** tags
          branches:
              - main
+             - v2
+         tags:
+             - /.*/
+   - name: "Cut-and-Run-qc"
+     subclass: WDL
+     primaryDescriptorPath: /workflows/qc-cut-and-run.wdl
+     filters:  # Only develop or master branches and localAligner/** tags
+         branches:
+             - v2
+             - main
          tags:
              - /.*/
