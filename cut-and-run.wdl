@@ -29,19 +29,24 @@ workflow wf_cut_and_run {
         String prefix_ctrl = "cutnrun-ctrl"
         String genome_name
         String? docker
+        Boolean trim_fastqs = true
     }
 
-#    call cutnrun_task_trim.cutnrun_trim as trim {
-#       input:
-#        fastq_R1 = fastq_R1,
-#        fastq_R2 = fastq_R2,
-#        prefix = prefix
-#    }
+    if(trim_fastqs){
+        scatter (idx in range(length(target_fastq_R1))){
+            call cutnrun_task_trim.cutnrun_trim as trim {
+                input:
+                    fastq_R1 = target_fastq_R1[idx],
+                    fastq_R2 = target_fastq_R2[idx],
+                    prefix = prefix
+            }
+        }
+    }
 
     call cutnrun_task_align.cutnrun_align as target_align {
         input:
-            fastq_R1 = target_fastq_R1,
-            fastq_R2 = target_fastq_R2,
+            fastq_R1 = select_first([trim.trimmed_R1, target_fastq_R1]),
+            fastq_R2 = select_first([trim.trimmed_R1, target_fastq_R1]),
             genome_index = idx_tar,
             genome_name = genome_name,
             prefix = prefix
