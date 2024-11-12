@@ -35,12 +35,12 @@ task qc {
     # Remove read unmapped, mate unmapped, read fails platform/vendor quality checks, supplementary alignment, and PCR or optical duplicate reads.
     # Keep only properly paired reads unique and multi.
     samtools view -h -F 3596 -f 2 filtered.output.bam | awk -v cutoff="~{fragment_minimum_size_cutoff}" 'substr($0,1,1)=="@" || ($9>= cutoff) || ($9<=cutoff)' | samtools view -b - > ~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam
-    samtools view -c ~{prefix}_major_contigs_x_nfr_unique_and_multi_mappings.bam > number_usable_reads_uniq_and_multi.txt
+    samtools view -c ~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam > number_usable_reads_uniq_and_multi.txt
 
     # Remove read unmapped, mate unmapped, read fails platform/vendor quality checks, not primary alignment, supplementary alignment, and PCR or optical duplicate reads.
     # Keep only unique properly paired reads.
     samtools view -h -q 30 -F 3852 -f 2 filtered.output.bam | awk -v cutoff="~{fragment_minimum_size_cutoff}" 'substr($0,1,1)=="@" || ($9>= cutoff) || ($9<=cutoff)' | samtools view -b - > ~{prefix}_major_contigs_no_nfr_unique_mappings.bam
-    samtools view -c ~{prefix}_major_contigs_x_nfr_unique_mappings.bam > number_usable_reads_uniq.txt
+    samtools view -c ~{prefix}_major_contigs_no_nfr_unique_mappings.bam > number_usable_reads_uniq.txt
 
     # Plot histogram of fragment size distribution
     python3 /usr/local/bin/plot_fragment_size_distribution.py fragment_size_distribution_uniq.txt ~{prefix}_fragment_size_distribution_unique_mapping_fragments
