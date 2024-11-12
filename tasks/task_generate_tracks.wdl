@@ -22,8 +22,8 @@ task generate_tracks {
 
     scale_factor=$(bc <<< "scale=6;1000000/~{library_size}")
 
-    bedtools genomecov -g ~{chromosome_sizes_file} -ibam ~{bam} -bg -fs > ~{prefix}.bedgraph
-    bedtools genomecov -g ~{chromosome_sizes_file} -ibam ~{bam} -bg -fs -scale $scale_factor > ~{prefix}_CPM.bedgraph
+    bedtools genomecov -g ~{chromosome_sizes_file} -ibam ~{bam} -bg -pc > ~{prefix}.bedgraph
+    bedtools genomecov -g ~{chromosome_sizes_file} -ibam ~{bam} -bg -pc -scale $scale_factor > ~{prefix}_CPM.bedgraph
 
     bedGraphToBigWig ~{prefix}.bedgraph ~{chromosome_sizes_file} ~{prefix}.bw
     bedGraphToBigWig ~{prefix}_CPM.bedgraph ~{chromosome_sizes_file} ~{prefix}.bw

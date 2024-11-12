@@ -47,11 +47,11 @@ task qc {
     python3 /usr/local/bin/plot_fragment_size_distribution.py fragment_size_distribution_uniq_multi.txt ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments
 
     # Extract summary counts. These should match the one found abobe.
-    grep ''Total number of fragments: ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $5}' > total_counts_unique.txt
-    grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $3}' > usable_counts_unique.txt
+    grep ''Total number of fragments: ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $5}' > number_total_fragments_unique.txt
+    grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $3}' > number_usable_fragments_unique.txt
 
-    grep 'Total number of fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $5}' > total_counts_unique_and_multi.txt
-    grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $3}' > usable_counts_unique_and_multi.txt
+    grep 'Total number of fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $5}' > number_total_fragments_unique_and_multi.txt
+    grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $3}' > number_usable_fragments_unique_and_multi.txt
 
     >>>
 
@@ -68,12 +68,12 @@ task qc {
         File fragment_size_distribution_unique_and_multi_plot_png = "~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments.png"
         
         File summary_fragment_counts_unique = "~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt"
-        Int number_total_fragment_unique = read_int("total_counts_unique.txt")
-        Int number_usable_fragments_unique = read_int("usable_counts_unique.txt")
+        Int number_total_fragments_unique = read_int("number_total_fragments_unique.txt")
+        Int number_usable_fragments_unique = read_int("number_usable_fragments_unique.txt")
 
         File summary_fragment_counts_unique_and_multi = "~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt"
-        Int number_total_fragment_unique_and_multi = read_int("total_counts_unique_and_multi.txt")
-        Int number_usable_fragments_unique_and_multi = read_int("usable_counts_unique_and_multi.txt")
+        Int number_total_fragments_unique_and_multi = read_int("number_total_fragments_unique_and_multi.txt")
+        Int number_usable_fragments_unique_and_multi = read_int("number_usable_fragments_unique_and_multi.txt")
     }
 
     runtime {
