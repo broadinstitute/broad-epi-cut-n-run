@@ -56,7 +56,7 @@ task qc {
     >>>
 
     output {
-        File filtered_bam_unique = "{prefix}_major_contigs_no_nfr_unique_mappings.bam"
+        File filtered_bam_unique = "~{prefix}_major_contigs_no_nfr_unique_mappings.bam"
         File filtered_bam_unique_and_multi = "~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam"
         
         Int number_usable_reads_unique_and_multi = read_int("number_usable_reads_uniq_and_multi.txt")
