@@ -47,11 +47,11 @@ task qc {
     python3 /usr/local/bin/plot_fragment_size_distribution.py fragment_size_distribution_uniq_multi.txt ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments
 
     # Extract summary counts. These should match the one found abobe.
-    grep 'Total number of fragments:' ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $5}' > total_counts_unique.txt
-    grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $2}' > usable_counts_unique.txt
+    grep ''Total number of fragments: ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $5}' > total_counts_unique.txt
+    grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $3}' > usable_counts_unique.txt
 
     grep 'Total number of fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $5}' > total_counts_unique_and_multi.txt
-    grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $2}' > usable_counts_unique_and_multi.txt
+    grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $3}' > usable_counts_unique_and_multi.txt
 
     >>>
 
