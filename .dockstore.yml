@@ -11,7 +11,7 @@ workflows:
              - /.*/
    - name: "Cut-and-Run-qc"
      subclass: WDL
-     primaryDescriptorPath: /workflows/qc-cut-and-run.wdl
+     primaryDescriptorPath: /workflows/qc-cut-n-run.wdl
      filters:  # Only develop or master branches and localAligner/** tags
          branches:
              - v2
