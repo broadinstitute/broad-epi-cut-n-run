@@ -26,7 +26,7 @@ task generate_tracks {
     bedtools genomecov -g ~{chromosome_sizes_file} -ibam ~{bam} -bg -pc -scale $scale_factor > ~{prefix}_CPM.bedgraph
 
     bedGraphToBigWig ~{prefix}.bedgraph ~{chromosome_sizes_file} ~{prefix}.bw
-    bedGraphToBigWig ~{prefix}_CPM.bedgraph ~{chromosome_sizes_file} ~{prefix}.bw
+    bedGraphToBigWig ~{prefix}_CPM.bedgraph ~{chromosome_sizes_file} ~{prefix}_CPM.bw
 
     >>>
 
