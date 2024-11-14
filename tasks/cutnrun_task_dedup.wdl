@@ -25,14 +25,14 @@ task cutnrun_dedup {
 
     command <<<
         # mark duplicates
-        java -Xmx2G -jar picard.jar MarkDuplicates \
+        java -Xmx2G -jar /usr/local/bin/picard.jar MarkDuplicates \
             INPUT=~{coordinate_sorted_bam} \
             OUTPUT=~{prefix}.markdup.tmp.bam \
             METRICS_FILE=~{prefix}.dup.qc.txt \
             VALIDATION_STRINGENCY=LENIENT
 
         # remove duplicates and clean up
-        samtools view -F 1024 -b ~{prefix}.markdup.tmp.bam > ~{prefix}.dedup.sorted.bam
+        /usr/local/bin/samtools/samtools view -F 1024 -b ~{prefix}.markdup.tmp.bam > ~{prefix}.dedup.sorted.bam
         rm ~{prefix}.markdup.tmp.bam
 
         samtools index ~{prefix}.dedup.sorted.bam
