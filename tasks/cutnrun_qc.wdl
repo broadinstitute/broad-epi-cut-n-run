@@ -28,14 +28,9 @@ task qc {
     major_contigs_list=$(tr '\n' ' ' < major_contigs.txt)
 
     # Filter the bam and keep only the chromosomes in the major_contigs.txt file.
-    # Extract the header of the bam file
-    samtools view -H ~{coordinate_sorted_bam} > header.sam
     # Filter the bam file
-    samtools view -o temp.bam -b ~{coordinate_sorted_bam} $major_contigs_list 
-    # Reheader the bam file
-    grep -f major_contigs.txt header.sam | samtools reheader - temp.bam > filtered.output.bam
+    samtools view -h -o filtered.output.bam -b ~{coordinate_sorted_bam} $major_contigs_list 
     samtools index filtered.output.bam
-    rm temp.bam header.sam
 
     samtools view -F 1548 -f 2 filtered.output.bam | awk '{ if ($9 > 0) { print $9 }}' | \
     sort -n | \
