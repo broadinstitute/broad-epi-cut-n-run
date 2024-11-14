@@ -12,7 +12,7 @@ workflow qc_cut_n_run {
         String? prefix
     }
 
-    call qc_task.qc {
+    call qc_task.qc as qc {
         input: 
             coordinate_sorted_bam=coordinate_sorted_bam,
             fragment_minimum_size_cutoff=fragment_minimum_size_cutoff,
