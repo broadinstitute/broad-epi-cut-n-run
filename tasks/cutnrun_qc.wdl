@@ -21,6 +21,8 @@ task qc {
 
     command <<<
 
+    samtools index ~{coordinate_sorted_bam}
+
     # Read the chromosome sizes file, remove all the chromosomes that are not major contigs.
     grep -v random ~{chromosome_sizes_file} | grep -v chrUn | grep -v chrM | grep -v alt | grep -v random | grep -v fix | grep -v chrMT | cut -f1> major_contigs.txt
     major_contigs_list=$(tr '\n' ' ' < major_contigs.txt)
