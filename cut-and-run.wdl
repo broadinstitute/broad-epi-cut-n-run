@@ -124,8 +124,7 @@ workflow wf_cut_and_run {
         File? narrow_peak = peaks.narrow_peak
         File? bedgraph_peak_norm = peaks.bedgraph_peak_norm
         File? bw_peak_norm = peaks.bw_peak_norm
-
-        File target_qc_bedpe = target_qc.namesorted_bedpe
+    
         File target_qc_filtered_bam_unique = target_qc.final_bam_unique
         File target_qc_filtered_bam_unique_and_multi = target_qc.final_bam_unique_and_multi
         Int target_qc_number_usable_reads_unique_and_multi = target_qc.number_usable_reads_unique_and_multi
@@ -137,7 +136,6 @@ workflow wf_cut_and_run {
         File target_qc_fragment_size_distribution_unique_txt = target_qc.fragment_size_distribution_unique_txt
         File target_qc_fragment_size_distribution_unique_and_multi_txt = target_qc.fragment_size_distribution_unique_and_multi_txt
 
-        File ctrl_qc_bedpe = ctrl_qc.namesorted_bedpe
         File ctrl_qc_filtered_bam_unique = ctrl_qc.final_bam_unique
         File ctrl_qc_filtered_bam_unique_and_multi = ctrl_qc.final_bam_unique_and_multi
         Int ctrl_qc_number_usable_reads_unique_and_multi = ctrl_qc.number_usable_reads_unique_and_multi

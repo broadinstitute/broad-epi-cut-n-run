@@ -24,7 +24,7 @@ workflow qc_cut_n_run {
         input: 
             bam=qc.final_bam_unique,
             chromosome_sizes_file=chromosome_sizes_file,
-            library_size=qc.number_usable_fragments_unique,
+            library_size=qc.number_usable_fragments_unique_and_multi,
             prefix="${prefix}_unique"
     }
 
@@ -36,18 +36,17 @@ workflow qc_cut_n_run {
             prefix="${prefix}_unique_and_multi"
     }
 
-    call qc_bed_task.qc as bed_qc {
-        input: 
-            coord_sorted_bam=coordinate_sorted_bam,
-            chromosome_sizes_file=chromosome_sizes_file,
-            fragment_minimum_size_cutoff=fragment_minimum_size_cutoff,
-            prefix=prefix
-    }
+# Abandoned because bowtie2 does not support the NH tag.
+#    call qc_bed_task.qc as bed_qc {
+#        input: 
+#            coord_sorted_bam=coordinate_sorted_bam,
+#            chromosome_sizes_file=chromosome_sizes_file,
+#            fragment_minimum_size_cutoff=fragment_minimum_size_cutoff,
+#            prefix=prefix
+#    }
 
 
     output {
-        # QC bed outputs
-        File namesorted_bedpe = bed_qc.namesorted_bedpe
         # QC outputs
         File final_bam_unique = qc.final_bam_unique
         File final_bam_unique_and_multi = qc.final_bam_unique_and_multi
