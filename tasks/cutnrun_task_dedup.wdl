@@ -35,7 +35,7 @@ task cutnrun_dedup {
         /usr/local/bin/samtools/samtools view -F 1024 -b ~{prefix}.markdup.tmp.bam > ~{prefix}.dedup.sorted.bam
         rm ~{prefix}.markdup.tmp.bam
 
-        samtools index ~{prefix}.dedup.sorted.bam
+        /usr/local/bin/samtools/samtools index ~{prefix}.dedup.sorted.bam
     >>>
 
     output {
