@@ -29,7 +29,7 @@ task qc {
 
     # Filter the bam and keep only the chromosomes in the major_contigs.txt file.
     # Filter the bam file
-    samtools view -h -o filtered.output.bam -b ~{coordinate_sorted_bam} $major_contigs_list 
+    samtools view -h -o filtered.output.bam -b ~{coordinate_sorted_bam} $major_contigs_list   
     samtools index filtered.output.bam
 
     samtools view -F 1548 -f 2 filtered.output.bam | awk '{ if ($9 > 0) { print $9 }}' | \
