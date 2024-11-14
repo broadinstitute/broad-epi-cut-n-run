@@ -123,40 +123,30 @@ workflow wf_cut_and_run {
     
         File target_qc_filtered_bam_unique = target_qc.final_bam_unique
         File target_qc_filtered_bam_unique_and_multi = target_qc.final_bam_unique_and_multi
-        Int target_qc_number_usable_reads_unique_and_multi = target_qc.number_usable_reads_unique_and_multi
-        Int target_qc_number_usable_reads_unique = target_qc.number_usable_reads_unique
         File target_qc_fragment_size_distribution_unique_plot_pdf = target_qc.fragment_size_distribution_unique_plot_pdf
         File target_qc_fragment_size_distribution_unique_plot_png = target_qc.fragment_size_distribution_unique_plot_png
         File target_qc_fragment_size_distribution_unique_and_multi_plot_pdf = target_qc.fragment_size_distribution_unique_and_multi_plot_pdf
         File target_qc_fragment_size_distribution_unique_and_multi_plot_png = target_qc.fragment_size_distribution_unique_and_multi_plot_png
         File target_qc_fragment_size_distribution_unique_txt = target_qc.fragment_size_distribution_unique_txt
         File target_qc_fragment_size_distribution_unique_and_multi_txt = target_qc.fragment_size_distribution_unique_and_multi_txt
-        File target_qc_bedgraph_unique = target_qc.bedgraph_unique
-        File target_qc_bedgraph_cpm_unique = target_qc.bedgraph_cpm_unique
         File target_qc_bigwig_unique = target_qc.bigwig_unique
         File target_qc_bigwig_cpm_unique = target_qc.bigwig_cpm_unique
-        File target_qc_bedgraph_unique_and_multi = target_qc.bedgraph_unique_and_multi
-        File target_qc_bedgraph_cpm_unique_and_multi = target_qc.bedgraph_cpm_unique_and_multi
         File target_qc_bigwig_unique_and_multi = target_qc.bigwig_unique_and_multi
         File target_qc_bigwig_cpm_unique_and_multi = target_qc.bigwig_cpm_unique_and_multi
+        Int target_qc_library_size_fragments = target_qc.library_size_fragments
 
         File ctrl_qc_filtered_bam_unique = ctrl_qc.final_bam_unique
         File ctrl_qc_filtered_bam_unique_and_multi = ctrl_qc.final_bam_unique_and_multi
-        Int ctrl_qc_number_usable_reads_unique_and_multi = ctrl_qc.number_usable_reads_unique_and_multi
-        Int ctrl_qc_number_usable_reads_unique = ctrl_qc.number_usable_reads_unique
         File ctrl_qc_fragment_size_distribution_unique_plot_pdf = ctrl_qc.fragment_size_distribution_unique_plot_pdf
         File ctrl_qc_fragment_size_distribution_unique_plot_png = ctrl_qc.fragment_size_distribution_unique_plot_png
         File ctrl_qc_fragment_size_distribution_unique_and_multi_plot_pdf = ctrl_qc.fragment_size_distribution_unique_and_multi_plot_pdf
         File ctrl_qc_fragment_size_distribution_unique_and_multi_plot_png = ctrl_qc.fragment_size_distribution_unique_and_multi_plot_png
         File ctrl_qc_fragment_size_distribution_unique_txt = ctrl_qc.fragment_size_distribution_unique_txt
         File ctrl_qc_fragment_size_distribution_unique_and_multi_txt = ctrl_qc.fragment_size_distribution_unique_and_multi_txt
-        File ctrl_qc_bedgraph_unique = ctrl_qc.bedgraph_unique
-        File ctrl_qc_bedgraph_cpm_unique = ctrl_qc.bedgraph_cpm_unique
         File ctrl_qc_bigwig_unique = ctrl_qc.bigwig_unique
         File ctrl_qc_bigwig_cpm_unique = ctrl_qc.bigwig_cpm_unique
-        File ctrl_qc_bedgraph_unique_and_multi = ctrl_qc.bedgraph_unique_and_multi
-        File ctrl_qc_bedgraph_cpm_unique_and_multi = ctrl_qc.bedgraph_cpm_unique_and_multi
         File ctrl_qc_bigwig_unique_and_multi = ctrl_qc.bigwig_unique_and_multi
         File ctrl_qc_bigwig_cpm_unique_and_multi = ctrl_qc.bigwig_cpm_unique_and_multi
+        Int ctrl_qc_library_size_fragments = ctrl_qc.library_size_fragments
     }
 }

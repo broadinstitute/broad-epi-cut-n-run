@@ -29,26 +29,27 @@ task qc {
 
     # Filter the bam and keep only the chromosomes in the major_contigs.txt file.
     # Filter the bam file
-    samtools view -h -o filtered.output.bam -b ~{coordinate_sorted_bam} $major_contigs_list   
+    # Remove read unmapped, mate unmapped, read fails platform/vendor quality checks, not primary alignment, and PCR or optical duplicate reads.
+    samtools view -h -F 1804 -f2 -o filtered.output.bam -b ~{coordinate_sorted_bam} $major_contigs_list   
     samtools index filtered.output.bam
 
-    samtools view -F 1548 -f 2 filtered.output.bam | awk '{ if ($9 > 0) { print $9 }}' | \
+    samtools view filtered.output.bam | awk '{ if ($9 > 0) { print $9 }}' | \
     sort -n | \
     uniq -c > ~{prefix}_fragment_size_distribution_uniq_multi.txt
 
-    samtools view -q 30 -F 3852 -f 2 filtered.output.bam | awk '{ if ($9 > 0) { print $9 }}' | \
+    samtools view -q 30 -F 2048 filtered.output.bam | awk '{ if ($9 > 0) { print $9 }}' | \
     sort -n | \
     uniq -c > ~{prefix}_fragment_size_distribution_uniq.txt
+
+    samtools view -f 64 -c filtered.output.bam > fragment_library_size.txt
     
     # Compute number of fragments in bam file
-    # Remove read unmapped, mate unmapped, read fails platform/vendor quality checks, supplementary alignment, and PCR or optical duplicate reads.
     # Keep only properly paired reads unique and multi.
-    samtools view -h -F 1548 -f 2 filtered.output.bam | awk -v cutoff="~{fragment_minimum_size_cutoff}" 'substr($0,1,1)=="@" || ($9>= cutoff) || ($9<=cutoff)' | samtools view -b - > ~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam
+    samtools view -h filtered.output.bam | awk -v cutoff="~{fragment_minimum_size_cutoff}" 'substr($0,1,1)=="@" || ($9>= cutoff) || ($9<=cutoff)' | samtools view -b - > ~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam
     samtools view -c ~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam > number_usable_reads_uniq_and_multi.txt
 
-    # Remove read unmapped, mate unmapped, read fails platform/vendor quality checks, not primary alignment, supplementary alignment, and PCR or optical duplicate reads.
-    # Keep only unique properly paired reads.
-    samtools view -h -q 30 -F 3852 -f 2 filtered.output.bam | awk -v cutoff="~{fragment_minimum_size_cutoff}" 'substr($0,1,1)=="@" || ($9>= cutoff) || ($9<=cutoff)' | samtools view -b - > ~{prefix}_major_contigs_no_nfr_unique_mappings.bam
+    # Keep only unique properly paired reads, remove supplementary alignments.
+    samtools view -h -q 30 -F 2048 -f 2 filtered.output.bam | awk -v cutoff="~{fragment_minimum_size_cutoff}" 'substr($0,1,1)=="@" || ($9>= cutoff) || ($9<=cutoff)' | samtools view -b - > ~{prefix}_major_contigs_no_nfr_unique_mappings.bam
     samtools view -c ~{prefix}_major_contigs_no_nfr_unique_mappings.bam > number_usable_reads_uniq.txt
 
     # Plot histogram of fragment size distribution
@@ -56,11 +57,11 @@ task qc {
     python3 /usr/local/bin/plot_fragment_size_distribution.py ~{prefix}_fragment_size_distribution_uniq_multi.txt ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments
 
     # Extract summary counts. These should match the one found abobe.
-    grep 'Total number of fragments:' ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $5}' > number_total_fragments_unique.txt
-    grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $3}' > number_usable_fragments_unique.txt
+    #grep 'Total number of fragments:' ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $5}' > number_total_fragments_unique.txt
+    #grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt | awk '{print $3}' > number_usable_fragments_unique.txt
 
-    grep 'Total number of fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $5}' > number_total_fragments_unique_and_multi.txt
-    grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $3}' > number_usable_fragments_unique_and_multi.txt
+    #grep 'Total number of fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $5}' > number_total_fragments_unique_and_multi.txt
+    #grep 'Usable fragments:' ~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt | awk '{print $3}' > number_usable_fragments_unique_and_multi.txt
 
     >>>
 
@@ -68,8 +69,7 @@ task qc {
         File final_bam_unique = "~{prefix}_major_contigs_no_nfr_unique_mappings.bam"
         File final_bam_unique_and_multi = "~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam"
         
-        Int number_usable_reads_unique = read_int("number_usable_reads_uniq.txt")
-        Int number_usable_reads_unique_and_multi = read_int("number_usable_reads_uniq_and_multi.txt")
+        Int library_size_fragments = read_int("library_size.txt")
 
         File fragment_size_distribution_unique_txt = "~{prefix}_fragment_size_distribution_uniq.txt"
         File fragment_size_distribution_unique_and_multi_txt = "~{prefix}_fragment_size_distribution_uniq_multi.txt"
@@ -79,12 +79,12 @@ task qc {
         File fragment_size_distribution_unique_and_multi_plot_png = "~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments.png"
         
         File summary_fragment_counts_unique = "~{prefix}_fragment_size_distribution_unique_mapping_fragments_summary_counts.txt"
-        Int number_total_fragments_unique = read_int("number_total_fragments_unique.txt")
-        Int number_usable_fragments_unique = read_int("number_usable_fragments_unique.txt")
+        #Int number_total_fragments_unique = read_int("number_total_fragments_unique.txt")
+        #Int number_usable_fragments_unique = read_int("number_usable_fragments_unique.txt")
 
         File summary_fragment_counts_unique_and_multi = "~{prefix}_fragment_size_distribution_unique_and_multi_mapping_fragments_summary_counts.txt"
-        Int number_total_fragments_unique_and_multi = read_int("number_total_fragments_unique_and_multi.txt")
-        Int number_usable_fragments_unique_and_multi = read_int("number_usable_fragments_unique_and_multi.txt")
+        #Int number_total_fragments_unique_and_multi = read_int("number_total_fragments_unique_and_multi.txt")
+        #Int number_usable_fragments_unique_and_multi = read_int("number_usable_fragments_unique_and_multi.txt")
     }
 
     runtime {
