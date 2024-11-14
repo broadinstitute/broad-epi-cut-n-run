@@ -69,7 +69,7 @@ task qc {
         File final_bam_unique = "~{prefix}_major_contigs_no_nfr_unique_mappings.bam"
         File final_bam_unique_and_multi = "~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam"
         
-        Int library_size_fragments = read_int("library_size.txt")
+        Int library_size_fragments = read_int("fragment_library_size.txt")
 
         File fragment_size_distribution_unique_txt = "~{prefix}_fragment_size_distribution_uniq.txt"
         File fragment_size_distribution_unique_and_multi_txt = "~{prefix}_fragment_size_distribution_uniq_multi.txt"
