@@ -2,10 +2,9 @@ version 1.0
 
 import "tasks/cutnrun_task_trim.wdl" as cutnrun_task_trim
 import "tasks/cutnrun_task_bowtie2.wdl" as cutnrun_task_align
-import "tasks/cutnrun_task_bam2bed.wdl" as cutnrun_task_bam2bed
-import "tasks/cutnrun_task_viz.wdl" as cutnrun_task_visualization
+import "tasks/cutnrun_task_dedup.wdl" as cutnrun_task_dedup
 import "tasks/cutnrun_task_peak.wdl" as cutnrun_task_peak_calling
-import "tasks/cutnrun_task_deeptools.wdl" as cutnrun_task_deeptools
+import "workflows/qc-cut-n-run.wdl" as qc_cutnrun
 
 workflow wf_cut_and_run {
     meta {
@@ -21,23 +20,30 @@ workflow wf_cut_and_run {
         Array[File] ctrl_fastq_R2
         File idx_tar
         File chrom_sizes
-        File tss
-        File genes
-        String? normalization = "norm"
-        String? stringency = "relaxed"
+
         String prefix = "cutnrun-sample"
         String prefix_ctrl = "cutnrun-ctrl"
         String genome_name
-        String? docker
+
         Boolean trim_fastqs = true
+        Boolean peak_calling = false
     }
 
     if(trim_fastqs){
         scatter (idx in range(length(target_fastq_R1))){
-            call cutnrun_task_trim.cutnrun_trim as trim {
+            call cutnrun_task_trim.cutnrun_trim as trim_target {
                 input:
                     fastq_R1 = target_fastq_R1[idx],
                     fastq_R2 = target_fastq_R2[idx],
+                    prefix = prefix
+            }
+        }
+
+        scatter (idx in range(length(ctrl_fastq_R1))){
+            call cutnrun_task_trim.cutnrun_trim as trim_ctrl {
+                input:
+                    fastq_R1 = ctrl_fastq_R1[idx],
+                    fastq_R2 = ctrl_fastq_R2[idx],
                     prefix = prefix
             }
         }
@@ -45,8 +51,8 @@ workflow wf_cut_and_run {
 
     call cutnrun_task_align.cutnrun_align as target_align {
         input:
-            fastq_R1 = select_first([trim.trimmed_R1, target_fastq_R1]),
-            fastq_R2 = select_first([trim.trimmed_R1, target_fastq_R1]),
+            fastq_R1 = select_first([trim_target.trimmed_R1, target_fastq_R1]),
+            fastq_R2 = select_first([trim_target.trimmed_R2, target_fastq_R2]),
             genome_index = idx_tar,
             genome_name = genome_name,
             prefix = prefix
@@ -54,126 +60,93 @@ workflow wf_cut_and_run {
 
     call cutnrun_task_align.cutnrun_align as ctrl_align {
         input:
-            fastq_R1 = ctrl_fastq_R1,
-            fastq_R2 = ctrl_fastq_R2,
+            fastq_R1 = select_first([trim_ctrl.trimmed_R1, target_fastq_R1]),
+            fastq_R2 = select_first([trim_ctrl.trimmed_R2, target_fastq_R2]),
             genome_index = idx_tar,
             genome_name = genome_name,
             prefix = prefix_ctrl
     }
 
-        call cutnrun_task_bam2bed.cutnrun_bam2bed as target_bam2bed {
-           input:
-            bam = target_align.cutnrun_alignment,
+    call cutnrun_task_dedup.cutnrun_dedup as target_dedup {
+        input:
+            coordinate_sorted_bam = target_align.raw_sorted_bam,
             prefix = prefix
+    }
+
+    call cutnrun_task_dedup.cutnrun_dedup as ctrl_dedup {
+        input:
+            coordinate_sorted_bam = ctrl_align.raw_sorted_bam,
+            prefix = prefix_ctrl
+    }
+
+    call qc_cutnrun.qc_cut_n_run as ctrl_qc {
+        input:
+            coordinate_sorted_bam = ctrl_dedup.sorted_dedup_bam,
+            chromosome_sizes_file = chrom_sizes,
+            fragment_minimum_size_cutoff = 120,
+            prefix = prefix
+    }
+
+    call qc_cutnrun.qc_cut_n_run as target_qc {
+        input:
+            coordinate_sorted_bam = target_dedup.sorted_dedup_bam,
+            chromosome_sizes_file = chrom_sizes,
+            fragment_minimum_size_cutoff = 120,
+            prefix = prefix
+    }
+
+    if(peak_calling){
+        call cutnrun_task_peak_calling.cutnrun_peak as peaks {
+            input:
+                bedgraph_input = target_qc.bedgraph_unique_and_multi,
+                bedgraph_ctrl = ctrl_qc.bedgraph_unique_and_multi,
+                chr_sizes = chrom_sizes,
+                prefix = prefix
         }
-
-        call cutnrun_task_bam2bed.cutnrun_bam2bed as ctrl_bam2bed {
-           input:
-            bam = ctrl_align.cutnrun_alignment,
-            prefix = prefix_ctrl
-        }
-
-    call cutnrun_task_visualization.cutnrun_viz as target_track_generation {
-        input:
-            bedpe = target_bam2bed.bedpe,
-            chr_sizes = chrom_sizes,
-            prefix = prefix
     }
 
-    call cutnrun_task_visualization.cutnrun_viz as ctrl_track_generation {
-        input:
-            bedpe = ctrl_bam2bed.bedpe,
-            chr_sizes = chrom_sizes,
-            prefix = prefix_ctrl
+
+    output {
+        File target_alignment_bam = target_align.raw_sorted_bam
+        File target_alignment_bai = target_align.raw_sorted_bai
+        File target_alignment_log = target_align.alignment_log
+        File target_dedup_sorted_bam = target_dedup.sorted_dedup_bam
+        File target_dedup_sorted_bai = target_dedup.sorted_dedup_bai
+        File target_dedup_qc_metrics = target_dedup.dedup_qc_metrics
+
+        File ctrl_alignment_bam = ctrl_align.raw_sorted_bam
+        File ctrl_alignment_bai = ctrl_align.raw_sorted_bai
+        File ctrl_alignment_log = ctrl_align.alignment_log
+        File ctrl_dedup_sorted_bam = ctrl_dedup.sorted_dedup_bam
+        File ctrl_dedup_sorted_bai = ctrl_dedup.sorted_dedup_bai
+        File ctrl_dedup_qc_metrics = ctrl_dedup.dedup_qc_metrics
+
+        File? narrow_peak = peaks.narrow_peak
+        File? bedgraph_peak_norm = peaks.bedgraph_peak_norm
+        File? bw_peak_norm = peaks.bw_peak_norm
+
+        File target_qc_bedpe = target_qc.namesorted_bedpe
+        File target_qc_filtered_bam_unique = target_qc.final_bam_unique
+        File target_qc_filtered_bam_unique_and_multi = target_qc.final_bam_unique_and_multi
+        Int target_qc_number_usable_reads_unique_and_multi = target_qc.number_usable_reads_unique_and_multi
+        Int target_qc_number_usable_reads_unique = target_qc.number_usable_reads_unique
+        File target_qc_fragment_size_distribution_unique_plot_pdf = target_qc.fragment_size_distribution_unique_plot_pdf
+        File target_qc_fragment_size_distribution_unique_plot_png = target_qc.fragment_size_distribution_unique_plot_png
+        File target_qc_fragment_size_distribution_unique_and_multi_plot_pdf = target_qc.fragment_size_distribution_unique_and_multi_plot_pdf
+        File target_qc_fragment_size_distribution_unique_and_multi_plot_png = target_qc.fragment_size_distribution_unique_and_multi_plot_png
+        File target_qc_fragment_size_distribution_unique_txt = target_qc.fragment_size_distribution_unique_txt
+        File target_qc_fragment_size_distribution_unique_and_multi_txt = target_qc.fragment_size_distribution_unique_and_multi_txt
+
+        File ctrl_qc_bedpe = ctrl_qc.namesorted_bedpe
+        File ctrl_qc_filtered_bam_unique = ctrl_qc.final_bam_unique
+        File ctrl_qc_filtered_bam_unique_and_multi = ctrl_qc.final_bam_unique_and_multi
+        Int ctrl_qc_number_usable_reads_unique_and_multi = ctrl_qc.number_usable_reads_unique_and_multi
+        Int ctrl_qc_number_usable_reads_unique = ctrl_qc.number_usable_reads_unique
+        File ctrl_qc_fragment_size_distribution_unique_plot_pdf = ctrl_qc.fragment_size_distribution_unique_plot_pdf
+        File ctrl_qc_fragment_size_distribution_unique_plot_png = ctrl_qc.fragment_size_distribution_unique_plot_png
+        File ctrl_qc_fragment_size_distribution_unique_and_multi_plot_pdf = ctrl_qc.fragment_size_distribution_unique_and_multi_plot_pdf
+        File ctrl_qc_fragment_size_distribution_unique_and_multi_plot_png = ctrl_qc.fragment_size_distribution_unique_and_multi_plot_png
+        File ctrl_qc_fragment_size_distribution_unique_txt = ctrl_qc.fragment_size_distribution_unique_txt
+        File ctrl_qc_fragment_size_distribution_unique_and_multi_txt = ctrl_qc.fragment_size_distribution_unique_and_multi_txt  
     }
-
-    call cutnrun_task_peak_calling.cutnrun_peak as peak_calling {
-        input:
-            bedgraph_input = target_track_generation.bedgraph,
-            bedgraph_ctrl = ctrl_track_generation.bedgraph,
-            chr_sizes = chrom_sizes,
-            normalization = normalization,
-            stringency = stringency,
-            prefix = prefix
-    }
-
-    call cutnrun_task_deeptools.cutnrun_deeptools as ctrl_deeptools {
-        input:
-            cleaned_bam = ctrl_bam2bed.clean_bam,
-            chr_sizes = chrom_sizes,
-            tss = tss,
-            genes = genes,
-            prefix = prefix_ctrl
-    }
-
-    call cutnrun_task_deeptools.cutnrun_deeptools as target_deeptools {
-        input:
-            cleaned_bam = target_bam2bed.clean_bam,
-            chr_sizes = chrom_sizes,
-            tss = tss,
-            genes = genes,
-            prefix = prefix
-    }
-
-    call sort as ctrl_sort{
-        input:
-            cleaned_bam = ctrl_bam2bed.clean_bam,
-            prefix = prefix_ctrl
-    }
-
-    call sort as target_sort{
-        input:
-            cleaned_bam = target_bam2bed.clean_bam,
-            prefix = prefix
-    }
-
-        output {
-            File target_alignment_bam = target_align.cutnrun_alignment
-            File target_alignment_log = target_align.cutnrun_alignment_log
-            File target_bedpe = target_bam2bed.bedpe
-            File target_cleaned_bam = target_bam2bed.clean_bam
-            File target_cleaned_sorted_bam = target_sort.clean_sorted_bam
-            File target_bedgrapgh = target_track_generation.bedgraph
-            File target_bigwig = target_track_generation.bigwig
-            File target_deeptools_heatmap_genes = target_deeptools.heatmap_genes
-            File target_deeptools_heatmap_tss = target_deeptools.heatmap_tss
-            File target_deeptools_bw = target_deeptools.cleaned_deeptools_bw
-
-            File ctrl_alignment_bam = ctrl_align.cutnrun_alignment
-            File ctrl_alignment_log = ctrl_align.cutnrun_alignment_log
-            File ctrl_bedpe = ctrl_bam2bed.bedpe
-            File ctrl_cleaned_bam = ctrl_bam2bed.clean_bam
-            File ctrl_cleaned_sorted_bam = ctrl_sort.clean_sorted_bam
-            File ctrl_bedgrapgh = ctrl_track_generation.bedgraph
-            File ctrl_bigwig = ctrl_track_generation.bigwig
-            File ctrl_deeptools_heatmap_genes = ctrl_deeptools.heatmap_genes
-            File ctrl_deeptools_heatmap_tss = ctrl_deeptools.heatmap_tss
-            File ctrl_deeptools_bw = ctrl_deeptools.cleaned_deeptools_bw
-
-
-            #File narrow_peak = peak_calling.narrow_peak
-            #File bedgraph_peak_norm = peak_calling.bedgraph_peak_norm
-            #File bw_peak_norm = peak_calling.bw_peak_norm
-    }
-}
-
-task sort {
-  input {
-    String prefix
-    File cleaned_bam
-  }
-  String outbam = '${default="cutnrun" prefix}.dedup.cleaned.sorted.bam'
-  command {
-    $(which samtools) sort -@ 8 -m 3G ${cleaned_bam} -o ${outbam}
-  }
-  output {
-    File clean_sorted_bam = "${outbam}"
-  }
-  runtime {
-    maxRetries : 0
-    cpu : 8
-    memory : '32 GB'
-    disks : 'local-disk 100 SSD'
-    docker : 'us.gcr.io/buenrostro-share-seq/share_task_star'
-  }
 }

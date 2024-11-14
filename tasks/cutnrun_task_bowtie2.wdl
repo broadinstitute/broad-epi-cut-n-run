@@ -12,21 +12,28 @@ task cutnrun_align {
 
     input {
         # This task takes in input the preprocessed fastqs and align them to the genome.
-        Int? cpus = 16
-        Int? memory_gb = 64
         Array[File] fastq_R1
         Array[File] fastq_R2
+        String? prefix
         File genome_index       # This is a tar.gz folder with all the index files.
         String genome_name      # GRCh38, mm10
+
+        Boolean dovetail = true
+        Boolean no_mixed = false
+        Boolean no_discordant = false
+        Boolean very_sensitive = false
+        Int multimappers = -1
+
+        Int? cpus = 16
+        Int? memory_gb = 64
+        Int disk_gb = 200
         String docker_image = "us.gcr.io/buenrostro-share-seq/share_task_bowtie2"
-        String? prefix
+        
     }
 
-    Float input_file_size_gb = size(fastq_R1, "G")
-    # This is almost fixed for either mouse or human genome
-    Int mem_gb = memory_gb
-    #Int disk_gb = round(20.0 + 4 * input_file_size_gb)
-    Int disk_gb = 200
+    # Determining disk type base on the size of disk.
+    String disk_type = if disk_gb > 375 then "SSD" else "LOCAL"
+    
 
     # Define tmp file name
     String unsorted_bam = "${default="cutnrun" prefix}.cutnrun.align.${genome_name}.bam"
@@ -41,8 +48,13 @@ task cutnrun_align {
         tar zxvf ${genome_index} --no-same-owner -C ./
         genome_prefix=$(basename $(find . -type f -name "*.rev.1.bt2") .rev.1.bt2)
 
-
-        bowtie2 --dovetail \
+        bowtie2 \
+            --phred33 \
+            ~{true='--no-mixed ' false='' no_mixed} \
+            ~{true='--no-discordant ' false='' no_discordant} \
+            ~{true='--very-sensitive ' false='' very_sensitive} \
+            ~{true='--dovetail ' false='' dovetail} \
+            ~{if multimappers > 0 then "-k " + "~{multimappers}" else "" } \
             -p ${cpus} \
             -x $genome_prefix \
             -1 ${sep="," fastq_R1} \
@@ -63,15 +75,15 @@ task cutnrun_align {
     }
 
     output {
-        File cutnrun_alignment = sorted_bam
-        File cutnrun_alignment_index = sorted_bai
-        File cutnrun_alignment_log = alignment_log
+        File raw_sorted_bam = sorted_bam
+        File raw_sorted_bai = sorted_bai
+        File alignment_log = alignment_log
     }
 
     runtime {
         cpu : cpus
-        memory : mem_gb+'G'
-        disks : 'local-disk ${disk_gb} SSD'
+        memory : memory_gb+'G'
+        disks : 'local-disk ${disk_gb} ${disk_type}'
         docker : docker_image
     }
 
@@ -100,6 +112,26 @@ task cutnrun_align {
                 description: 'Prefix for output files',
                 help: 'Prefix that will be used to name the output files',
                 examples: 'MyExperiment'
+            }
+        dovetail: {
+                description: 'Dovetail alignment',
+                help: 'Perform dovetail alignment.'
+            }
+        no_mixed: {
+                description: 'No mixed alignments',
+                help: 'Do not allow mixed alignments.'
+            }
+        no_discordant: {
+                description: 'No discordant alignments',
+                help: 'Do not allow discordant alignments.'
+            }
+        very_sensitive: {
+                description: 'Very sensitive alignment',
+                help: 'Perform very sensitive alignment.'
+            }
+        multimappers: {
+                description: 'Multimappers',
+                help: 'Number of multimappers to allow. -1 means off.'
             }
         cpus: {
                 description: 'Number of cpus',
