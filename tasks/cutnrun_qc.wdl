@@ -30,7 +30,7 @@ task qc {
     # Filter the bam and keep only the chromosomes in the major_contigs.txt file.
     # Filter the bam file
     # Remove read unmapped, mate unmapped, read fails platform/vendor quality checks, not primary alignment, and PCR or optical duplicate reads.
-    samtools view -h -F 1804 -f2 -o filtered.output.bam -b ~{coordinate_sorted_bam} $major_contigs_list   
+    samtools view -h -F 1804 -f 2 -o filtered.output.bam -b ~{coordinate_sorted_bam} $major_contigs_list   
     samtools index filtered.output.bam
 
     samtools view filtered.output.bam | awk '{ if ($9 > 0) { print $9 }}' | \
@@ -45,12 +45,12 @@ task qc {
     
     # Compute number of fragments in bam file
     # Keep only properly paired reads unique and multi.
-    samtools view -h filtered.output.bam | awk -v cutoff="~{fragment_minimum_size_cutoff}" 'substr($0,1,1)=="@" || ($9>= cutoff) || ($9<=cutoff)' | samtools view -b - > ~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam
-    samtools view -c ~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam > number_usable_reads_uniq_and_multi.txt
+    samtools view -h  -f 2 filtered.output.bam | awk -v cutoff="~{fragment_minimum_size_cutoff}" 'substr($0,1,1)=="@" || ($9 >= cutoff) || ($9 <= (-1 * cutoff) )' | samtools view -b - > ~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam
+    #samtools view -c ~{prefix}_major_contigs_no_nfr_unique_and_multi_mappings.bam > number_usable_reads_uniq_and_multi.txt
 
     # Keep only unique properly paired reads, remove supplementary alignments.
-    samtools view -h -q 30 -F 2048 -f 2 filtered.output.bam | awk -v cutoff="~{fragment_minimum_size_cutoff}" 'substr($0,1,1)=="@" || ($9>= cutoff) || ($9<=cutoff)' | samtools view -b - > ~{prefix}_major_contigs_no_nfr_unique_mappings.bam
-    samtools view -c ~{prefix}_major_contigs_no_nfr_unique_mappings.bam > number_usable_reads_uniq.txt
+    samtools view -h -q 30 -F 2048 -f 2 filtered.output.bam | awk -v cutoff="~{fragment_minimum_size_cutoff}" 'substr($0,1,1)=="@" || ($9 >= cutoff) || ($9 <= (-1 * cutoff) )' | samtools view -b - > ~{prefix}_major_contigs_no_nfr_unique_mappings.bam
+    #samtools view -c ~{prefix}_major_contigs_no_nfr_unique_mappings.bam > number_usable_reads_uniq.txt
 
     # Plot histogram of fragment size distribution
     python3 /usr/local/bin/plot_fragment_size_distribution.py ~{prefix}_fragment_size_distribution_uniq.txt ~{prefix}_fragment_size_distribution_unique_mapping_fragments
