@@ -107,15 +107,11 @@ workflow wf_cut_and_run {
 
 
     output {
-        File target_alignment_bam = target_align.raw_sorted_bam
-        File target_alignment_bai = target_align.raw_sorted_bai
         File target_alignment_log = target_align.alignment_log
         File target_dedup_sorted_bam = target_dedup.sorted_dedup_bam
         File target_dedup_sorted_bai = target_dedup.sorted_dedup_bai
         File target_dedup_qc_metrics = target_dedup.dedup_qc_metrics
 
-        File ctrl_alignment_bam = ctrl_align.raw_sorted_bam
-        File ctrl_alignment_bai = ctrl_align.raw_sorted_bai
         File ctrl_alignment_log = ctrl_align.alignment_log
         File ctrl_dedup_sorted_bam = ctrl_dedup.sorted_dedup_bam
         File ctrl_dedup_sorted_bai = ctrl_dedup.sorted_dedup_bai
@@ -135,6 +131,14 @@ workflow wf_cut_and_run {
         File target_qc_fragment_size_distribution_unique_and_multi_plot_png = target_qc.fragment_size_distribution_unique_and_multi_plot_png
         File target_qc_fragment_size_distribution_unique_txt = target_qc.fragment_size_distribution_unique_txt
         File target_qc_fragment_size_distribution_unique_and_multi_txt = target_qc.fragment_size_distribution_unique_and_multi_txt
+        File target_qc_bedgraph_unique = target_qc.bedgraph_unique
+        File target_qc_bedgraph_cpm_unique = target_qc.bedgraph_cpm_unique
+        File target_qc_bigwig_unique = target_qc.bigwig_unique
+        File target_qc_bigwig_cpm_unique = target_qc.bigwig_cpm_unique
+        File target_qc_bedgraph_unique_and_multi = target_qc.bedgraph_unique_and_multi
+        File target_qc_bedgraph_cpm_unique_and_multi = target_qc.bedgraph_cpm_unique_and_multi
+        File target_qc_bigwig_unique_and_multi = target_qc.bigwig_unique_and_multi
+        File target_qc_bigwig_cpm_unique_and_multi = target_qc.bigwig_cpm_unique_and_multi
 
         File ctrl_qc_filtered_bam_unique = ctrl_qc.final_bam_unique
         File ctrl_qc_filtered_bam_unique_and_multi = ctrl_qc.final_bam_unique_and_multi
@@ -145,6 +149,14 @@ workflow wf_cut_and_run {
         File ctrl_qc_fragment_size_distribution_unique_and_multi_plot_pdf = ctrl_qc.fragment_size_distribution_unique_and_multi_plot_pdf
         File ctrl_qc_fragment_size_distribution_unique_and_multi_plot_png = ctrl_qc.fragment_size_distribution_unique_and_multi_plot_png
         File ctrl_qc_fragment_size_distribution_unique_txt = ctrl_qc.fragment_size_distribution_unique_txt
-        File ctrl_qc_fragment_size_distribution_unique_and_multi_txt = ctrl_qc.fragment_size_distribution_unique_and_multi_txt  
+        File ctrl_qc_fragment_size_distribution_unique_and_multi_txt = ctrl_qc.fragment_size_distribution_unique_and_multi_txt
+        File ctrl_qc_bedgraph_unique = ctrl_qc.bedgraph_unique
+        File ctrl_qc_bedgraph_cpm_unique = ctrl_qc.bedgraph_cpm_unique
+        File ctrl_qc_bigwig_unique = ctrl_qc.bigwig_unique
+        File ctrl_qc_bigwig_cpm_unique = ctrl_qc.bigwig_cpm_unique
+        File ctrl_qc_bedgraph_unique_and_multi = ctrl_qc.bedgraph_unique_and_multi
+        File ctrl_qc_bedgraph_cpm_unique_and_multi = ctrl_qc.bedgraph_cpm_unique_and_multi
+        File ctrl_qc_bigwig_unique_and_multi = ctrl_qc.bigwig_unique_and_multi
+        File ctrl_qc_bigwig_cpm_unique_and_multi = ctrl_qc.bigwig_cpm_unique_and_multi
     }
 }
