@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 
 # Install dependencies
 RUN apt-get update && \
-    apt-get install -y samtools && \
+    apt-get install -y samtools bedtools && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

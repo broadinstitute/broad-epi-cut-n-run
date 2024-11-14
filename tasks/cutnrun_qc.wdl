@@ -23,12 +23,13 @@ task qc {
 
     # Read the chromosome sizes file, remove all the chromosomes that are not major contigs.
     grep -v random ~{chromosome_sizes_file} | grep -v chrUn | grep -v chrM | grep -v alt | grep -v random | grep -v fix | grep -v chrMT | cut -f1> major_contigs.txt
+    major_contigs_list=$(tr '\n' ' ' < major_contigs.txt)
 
     # Filter the bam and keep only the chromosomes in the major_contigs.txt file.
     # Extract the header of the bam file
     samtools view -H ~{coordinate_sorted_bam} > header.sam
     # Filter the bam file
-    samtools view ~{coordinate_sorted_bam}  | awk 'NR==FNR{chroms[$1]++}($3 in chroms){print $0}' major_contigs.txt - | samtools view -b -o temp.bam -
+    samtools view -o temp.bam -b ~{coordinate_sorted_bam} $major_contigs_list 
     # Reheader the bam file
     grep -f major_contigs.txt header.sam | samtools reheader - temp.bam > filtered.output.bam
     samtools index filtered.output.bam
