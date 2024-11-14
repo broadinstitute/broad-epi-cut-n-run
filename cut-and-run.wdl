@@ -44,11 +44,12 @@ workflow wf_cut_and_run {
                 input:
                     fastq_R1 = ctrl_fastq_R1[idx],
                     fastq_R2 = ctrl_fastq_R2[idx],
-                    prefix = prefix
+                    prefix = prefix_ctrl
             }
         }
     }
 
+    # Processing target sample
     call cutnrun_task_align.cutnrun_align as target_align {
         input:
             fastq_R1 = select_first([trim_target.trimmed_R1, target_fastq_R1]),
@@ -57,7 +58,20 @@ workflow wf_cut_and_run {
             genome_name = genome_name,
             prefix = prefix
     }
+    call cutnrun_task_dedup.cutnrun_dedup as target_dedup {
+        input:
+            coordinate_sorted_bam = target_align.raw_sorted_bam,
+            prefix = prefix
+    }
+    call qc_cutnrun.qc_cut_n_run as target_qc {
+        input:
+            coordinate_sorted_bam = target_dedup.sorted_dedup_bam,
+            chromosome_sizes_file = chrom_sizes,
+            fragment_minimum_size_cutoff = 120,
+            prefix = prefix
+    }
 
+    # Processing control
     call cutnrun_task_align.cutnrun_align as ctrl_align {
         input:
             fastq_R1 = select_first([trim_ctrl.trimmed_R1, target_fastq_R1]),
@@ -65,12 +79,6 @@ workflow wf_cut_and_run {
             genome_index = idx_tar,
             genome_name = genome_name,
             prefix = prefix_ctrl
-    }
-
-    call cutnrun_task_dedup.cutnrun_dedup as target_dedup {
-        input:
-            coordinate_sorted_bam = target_align.raw_sorted_bam,
-            prefix = prefix
     }
 
     call cutnrun_task_dedup.cutnrun_dedup as ctrl_dedup {
@@ -84,15 +92,7 @@ workflow wf_cut_and_run {
             coordinate_sorted_bam = ctrl_dedup.sorted_dedup_bam,
             chromosome_sizes_file = chrom_sizes,
             fragment_minimum_size_cutoff = 120,
-            prefix = prefix
-    }
-
-    call qc_cutnrun.qc_cut_n_run as target_qc {
-        input:
-            coordinate_sorted_bam = target_dedup.sorted_dedup_bam,
-            chromosome_sizes_file = chrom_sizes,
-            fragment_minimum_size_cutoff = 120,
-            prefix = prefix
+            prefix = prefix_ctrl
     }
 
     if(peak_calling){
